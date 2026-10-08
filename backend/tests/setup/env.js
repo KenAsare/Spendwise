@@ -10,7 +10,8 @@ process.env.JWT_ACCESS_EXPIRES_IN = '15m';
 process.env.SMTP_HOST = '';
 process.env.SMTP_USER = '';
 process.env.SMTP_PASS = '';
-
+process.env.BREVO_API_KEY = '';
+process.env.EMAIL_FROM = '';
 // Silence expected noise (dev-mode OTP banners, handled-error stack traces).
 // Run `SHOW_LOGS=1 npm test` to see them while debugging.
 if (!process.env.SHOW_LOGS) {

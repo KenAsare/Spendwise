@@ -17,6 +17,19 @@ const { generalLimiter } = require('./middleware/rateLimitMiddleware');
 
 const app = express();
 
+const getAllowedOrigins = () => {
+  const raw = process.env.CLIENT_URL || 'http://localhost:5173';
+
+  return raw
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => {
+      if (value === '*') return '*';
+      return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+    });
+};
+
 // 'dev' gives concise colored output while coding locally; 'combined' is
 // the standard Apache-style format most log aggregators (hosting
 // providers, log services) expect once this runs in production.
@@ -28,7 +41,25 @@ app.use(
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      const allowedOrigins = getAllowedOrigins();
+
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const normalizedOrigin = origin.replace(/\/$/, '');
+      const isAllowed = allowedOrigins.some((allowedOrigin) => {
+        if (allowedOrigin === '*') return true;
+        return allowedOrigin.replace(/\/$/, '') === normalizedOrigin;
+      });
+
+      if (isAllowed) {
+        return callback(null, true);
+      }
+
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     credentials: true,
   })
 );
